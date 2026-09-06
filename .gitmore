@@ -1,0 +1,21 @@
+# .gitmore
+# Custom file for repository cleanup metadata.
+# List paths or patterns that should be removed when creating a clean copy of the repo.
+# This is not a replacement for .gitignore; it's a helper for your cleanup scripts or notes.
+
+# Common build / IDE artifacts to remove
+bin/
+obj/
+.vs/
+TestResults/
+packages/
+node_modules/
+*.user
+*.suo
+*.userprefs
+*.log
+*.nupkg
+*.zip
+
+# Add any additional project-specific paths below:
+# path/to/unwanted
