@@ -29,6 +29,14 @@ namespace AdornmeStore.Infrastructure.Data
         public DbSet<PaymentMethod> PaymentMethods => Set<PaymentMethod>();
         public DbSet<Banner> Banners => Set<Banner>();
         public DbSet<Checkout> Checkouts => Set<Checkout>();
+        public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+
+        public DbSet<Offer> Offers => Set<Offer>();
+
+        public DbSet<OfferProduct> OfferProducts => Set<OfferProduct>();
+
+        public DbSet<OfferCategory> OfferCategories => Set<OfferCategory>();
+        public DbSet<InventoryTransaction> InventoryTransactions => Set<InventoryTransaction>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -41,18 +49,6 @@ namespace AdornmeStore.Infrastructure.Data
             modelBuilder.Entity<User>()
                 .HasIndex(x => x.Email)
                 .IsUnique();
-
-            // =========================
-            // Product
-            // =========================
-
-            modelBuilder.Entity<Product>()
-                .Property(x => x.Price)
-                .HasPrecision(18, 2);
-
-            modelBuilder.Entity<Product>()
-                .Property(x => x.DiscountPrice)
-                .HasPrecision(18, 2);
 
             // =========================
             // Order
@@ -152,6 +148,21 @@ namespace AdornmeStore.Infrastructure.Data
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.Property(x => x.OriginalPrice)
+                    .HasPrecision(18, 2)
+                    .IsRequired();
+
+                entity.Property(x => x.SellingPrice)
+                    .HasPrecision(18, 2)
+                    .IsRequired();
+
+                entity.Property(x => x.DiscountPercentage)
+                    .HasPrecision(5, 2)
+                    .IsRequired();
+            });
+
             // =========================
             // Order -> OrderItems
             // =========================
@@ -242,6 +253,155 @@ namespace AdornmeStore.Infrastructure.Data
                     .WithMany()
                     .HasForeignKey(x => x.ProductId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+           
+            modelBuilder.Entity<ProductImage>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.ImageUrl)
+                    .IsRequired()
+                    .HasMaxLength(1000);
+
+                entity.Property(x => x.DisplayOrder)
+                    .IsRequired();
+
+                entity.HasOne(x => x.Product)
+                    .WithMany(x => x.ProductImages)
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(x => new
+                {
+                    x.ProductId,
+                    x.DisplayOrder
+                });
+            });
+
+            // =========================
+            // Offer
+            // =========================
+
+            modelBuilder.Entity<Offer>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Name)
+                    .IsRequired()
+                    .HasMaxLength(200);
+
+                entity.Property(x => x.OfferType)
+                    .IsRequired();
+
+                entity.Property(x => x.Scope)
+                    .IsRequired();
+
+                entity.Property(x => x.DiscountValue)
+                    .HasPrecision(18, 2)
+                    .IsRequired();
+
+                entity.Property(x => x.StartDate)
+                    .IsRequired();
+
+                entity.Property(x => x.EndDate)
+                    .IsRequired();
+
+                entity.Property(x => x.IsActive)
+                    .IsRequired();
+
+                entity.HasIndex(x => new
+                {
+                    x.IsActive,
+                    x.StartDate,
+                    x.EndDate
+                });
+            });
+
+
+            // =========================
+            // Offer -> Products
+            // =========================
+
+            modelBuilder.Entity<OfferProduct>(entity =>
+            {
+                entity.HasKey(x => new
+                {
+                    x.OfferId,
+                    x.ProductId
+                });
+
+                entity.HasOne(x => x.Offer)
+                    .WithMany(x => x.OfferProducts)
+                    .HasForeignKey(x => x.OfferId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(x => x.ProductId);
+            });
+
+
+            // =========================
+            // Offer -> Categories
+            // =========================
+
+            modelBuilder.Entity<OfferCategory>(entity =>
+            {
+                entity.HasKey(x => new
+                {
+                    x.OfferId,
+                    x.CategoryId
+                });
+
+                entity.HasOne(x => x.Offer)
+                    .WithMany(x => x.OfferCategories)
+                    .HasForeignKey(x => x.OfferId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Category)
+                    .WithMany()
+                    .HasForeignKey(x => x.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(x => x.CategoryId);
+            });
+
+            modelBuilder.Entity<InventoryTransaction>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Type)
+                    .IsRequired();
+
+                entity.Property(x => x.Quantity)
+                    .IsRequired();
+
+                entity.Property(x => x.PreviousStock)
+                    .IsRequired();
+
+                entity.Property(x => x.NewStock)
+                    .IsRequired();
+
+                entity.Property(x => x.Reason)
+                    .HasMaxLength(500);
+
+                entity.Property(x => x.Reference)
+                    .HasMaxLength(200);
+
+                entity.Property(x => x.CreatedAt)
+                    .IsRequired();
+
+                entity.HasOne(x => x.Product)
+                    .WithMany(x => x.InventoryTransactions)
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(x => x.ProductId);
+
+                entity.HasIndex(x => x.CreatedAt);
             });
         }
     }

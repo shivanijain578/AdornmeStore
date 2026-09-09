@@ -1,4 +1,3 @@
-using AdornmeStore.API.Models;
 using AdornmeStore.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +11,8 @@ public class HomeProductsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
 
-    public HomeProductsController(ApplicationDbContext db)
+    public HomeProductsController(
+        ApplicationDbContext db)
     {
         _db = db;
     }
@@ -25,28 +25,51 @@ public class HomeProductsController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20)
     {
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 20;
+        if (page < 1)
+            page = 1;
 
-        var query = _db.Products.AsNoTracking()
+        if (pageSize < 1)
+            pageSize = 20;
+
+        if (pageSize > 100)
+            pageSize = 100;
+
+        var query = _db.Products
+            .AsNoTracking()
             .Where(p => p.IsActive);
 
         if (categoryId.HasValue)
-            query = query.Where(p => p.CategoryId == categoryId.Value);
+        {
+            query = query.Where(
+                p => p.CategoryId == categoryId.Value);
+        }
 
         var items = await query
             .OrderByDescending(p => p.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(p => new ProductSummaryDto
+            .Select(p => new
             {
-                Id = p.Id,
-                Name = p.Name,
-                Price = p.Price,
-                DiscountPrice = p.DiscountPrice,
-                ImageUrl = p.ImageUrl,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Category.Name
+                p.Id,
+                p.Name,
+
+                p.OriginalPrice,
+                p.SellingPrice,
+                p.DiscountPercentage,
+
+                p.CategoryId,
+
+                CategoryName = p.Category.Name,
+
+                Images = p.ProductImages
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => new
+                    {
+                        i.Id,
+                        i.ImageUrl,
+                        i.DisplayOrder
+                    })
+                    .ToList()
             })
             .ToListAsync();
 
@@ -58,29 +81,53 @@ public class HomeProductsController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetById(int id)
     {
-        var p = await _db.Products
+        var product = await _db.Products
             .AsNoTracking()
-            .Include(x => x.Category)
-            .Where(x => x.Id == id && x.IsActive)
-            .Select(x => new ProductDetailDto
+            .Where(x =>
+                x.Id == id &&
+                x.IsActive)
+            .Select(x => new
             {
-                Id = x.Id,
-                Name = x.Name,
-                Description = x.Description,
-                Price = x.Price,
-                DiscountPrice = x.DiscountPrice,
-                StockQuantity = x.StockQuantity,
-                ImageUrl = x.ImageUrl,
-                Material = x.Material,
-                Gender = x.Gender,
-                CategoryId = x.CategoryId,
-                CategoryName = x.Category.Name
+                x.Id,
+
+                x.Name,
+
+                x.Description,
+
+                x.OriginalPrice,
+                x.SellingPrice,
+                x.DiscountPercentage,
+
+                x.StockQuantity,
+
+                x.Material,
+
+                x.Gender,
+
+                x.CategoryId,
+
+                CategoryName = x.Category.Name,
+
+                Images = x.ProductImages
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => new
+                    {
+                        i.Id,
+                        i.ImageUrl,
+                        i.DisplayOrder
+                    })
+                    .ToList()
             })
             .FirstOrDefaultAsync();
 
-        if (p == null)
-            return NotFound(new { message = "Product not found." });
+        if (product == null)
+        {
+            return NotFound(new
+            {
+                message = "Product not found."
+            });
+        }
 
-        return Ok(p);
+        return Ok(product);
     }
 }

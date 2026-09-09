@@ -17,65 +17,79 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetByIdAsync(int id)
     {
         return await _context.Products
+            .Include(x => x.ProductImages)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
     public async Task<Product?> GetByIdWithCategoryAsync(int id)
     {
         return await _context.Products
+            .AsNoTracking()
             .Include(x => x.Category)
+            .Include(x => x.ProductImages)
             .FirstOrDefaultAsync(x => x.Id == id);
     }
 
-    public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsAsync(
-        string? search,
-        int? categoryId,
-        decimal? minPrice,
-        decimal? maxPrice,
-        string? sortBy,
-        bool sortDescending,
-        int pageNumber,
-        int pageSize)
+    public async Task<(IEnumerable<Product> Items, int TotalCount)>
+        GetProductsAsync(
+            string? search,
+            int? categoryId,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string? sortBy,
+            bool sortDescending,
+            int pageNumber,
+            int pageSize)
     {
         IQueryable<Product> query = _context.Products
             .AsNoTracking()
-            .Include(x => x.Category);
+            .Include(x => x.Category)
+            .Include(x => x.ProductImages);
 
         // Search
         if (!string.IsNullOrWhiteSpace(search))
         {
+            search = search.Trim();
+
             query = query.Where(x =>
                 x.Name.Contains(search) ||
                 x.Description.Contains(search));
         }
 
-        // Category filter
+        // Category
         if (categoryId.HasValue)
         {
             query = query.Where(x =>
                 x.CategoryId == categoryId.Value);
         }
 
-        // Minimum price
+        // Price filtering is based on SellingPrice
         if (minPrice.HasValue)
         {
             query = query.Where(x =>
-                x.Price >= minPrice.Value);
+                x.SellingPrice >= minPrice.Value);
         }
 
-        // Maximum price
         if (maxPrice.HasValue)
         {
             query = query.Where(x =>
-                x.Price <= maxPrice.Value);
+                x.SellingPrice <= maxPrice.Value);
         }
 
         // Sorting
-        query = sortBy?.ToLower() switch
+        query = sortBy?.Trim().ToLowerInvariant() switch
         {
             "price" => sortDescending
-                ? query.OrderByDescending(x => x.Price)
-                : query.OrderBy(x => x.Price),
+                ? query.OrderByDescending(x => x.SellingPrice)
+                : query.OrderBy(x => x.SellingPrice),
+
+            "mrp" => sortDescending
+                ? query.OrderByDescending(x => x.OriginalPrice)
+                : query.OrderBy(x => x.OriginalPrice),
+
+            "discount" => sortDescending
+                ? query.OrderByDescending(x => x.DiscountPercentage)
+                : query.OrderBy(x => x.DiscountPercentage),
 
             "name" => sortDescending
                 ? query.OrderByDescending(x => x.Name)

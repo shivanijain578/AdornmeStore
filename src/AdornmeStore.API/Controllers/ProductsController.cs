@@ -11,7 +11,8 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
 
-    public ProductsController(IProductService productService)
+    public ProductsController(
+        IProductService productService)
     {
         _productService = productService;
     }
@@ -37,10 +38,12 @@ public class ProductsController : ControllerBase
             await _productService.GetByIdAsync(id);
 
         if (product == null)
+        {
             return NotFound(new
             {
                 message = "Product not found."
             });
+        }
 
         return Ok(product);
     }
@@ -48,35 +51,75 @@ public class ProductsController : ControllerBase
     // POST: api/products
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> CreateProduct(
-        [FromBody] CreateProductDto dto)
+     [FromForm] CreateProductDto dto,
+     CancellationToken cancellationToken)
     {
-        var product =
-            await _productService.CreateAsync(dto);
+        try
+        {
+            var product =
+                await _productService.CreateAsync(dto);
 
-        return CreatedAtAction(
-            nameof(GetProduct),
-            new { id = product.Id },
-            product);
+            return CreatedAtAction(
+                nameof(GetProduct),
+                new { id = product.Id },
+                product);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     // PUT: api/products/5
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateProduct(
-        int id,
-        [FromBody] UpdateProductDto dto)
+       int id,
+       [FromForm] UpdateProductDto dto,
+       CancellationToken cancellationToken)
     {
-        var product =
-            await _productService.UpdateAsync(id, dto);
+        try
+        {
+            var product =
+                await _productService.UpdateAsync(id, dto);
 
-        if (product == null)
+            if (product == null)
+            {
+                return NotFound(new
+                {
+                    message = "Product not found."
+                });
+            }
+
+            return Ok(product);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
             return NotFound(new
             {
-                message = "Product not found."
+                message = ex.Message
             });
-
-        return Ok(product);
+        }
     }
 
     // DELETE: api/products/5
@@ -88,10 +131,12 @@ public class ProductsController : ControllerBase
             await _productService.DeleteAsync(id);
 
         if (!deleted)
+        {
             return NotFound(new
             {
                 message = "Product not found."
             });
+        }
 
         return NoContent();
     }

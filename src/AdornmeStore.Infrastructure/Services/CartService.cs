@@ -13,17 +13,20 @@ namespace AdornmeStore.Infrastructure.Services
         private readonly IProductRepository _productRepository;
         private readonly ICurrentUserService _currentUser;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IProductPricingService _productPricingService;
 
         public CartService(
             ICartRepository cartRepository,
             IProductRepository productRepository,
             ICurrentUserService currentUser,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IProductPricingService productPricingService)
         {
             _cartRepository = cartRepository;
             _productRepository = productRepository;
             _currentUser = currentUser;
             _unitOfWork = unitOfWork;
+            _productPricingService = productPricingService;
         }
 
         public async Task<CartResponseDto> GetCartAsync()
@@ -31,7 +34,7 @@ namespace AdornmeStore.Infrastructure.Services
             var cart =
                 await GetOrCreateCartAsync();
 
-            return MapCart(cart);
+            return await MapCartAsync(cart);
         }
 
         public async Task<CartResponseDto> AddItemAsync(
@@ -98,7 +101,7 @@ namespace AdornmeStore.Infrastructure.Services
                 await _cartRepository.GetByUserIdAsync(
                     _currentUser.UserId);
 
-            return MapCart(updatedCart!);
+            return await MapCartAsync(updatedCart!);
         }
 
         public async Task<CartResponseDto?> UpdateItemAsync(
@@ -140,7 +143,7 @@ namespace AdornmeStore.Infrastructure.Services
                 await _cartRepository.GetByUserIdAsync(
                     _currentUser.UserId);
 
-            return MapCart(updatedCart!);
+            return await MapCartAsync(updatedCart!);
         }
 
         public async Task<bool> RemoveItemAsync(
@@ -207,31 +210,50 @@ namespace AdornmeStore.Infrastructure.Services
             return cart;
         }
 
-        private static CartResponseDto MapCart(
-            Cart cart)
+        private async Task<CartResponseDto> MapCartAsync(Cart cart)
         {
-            var items = cart.Items.Select(item =>
-                new CartItemDto
+            var items = new List<CartItemDto>();
+
+            foreach (var item in cart.Items)
+            {
+                var pricing =
+                    await _productPricingService.GetProductPricingAsync(
+                        item.ProductId);
+
+                var imageUrl = item.Product.ProductImages
+                    .OrderBy(x => x.DisplayOrder)
+                    .Select(x => x.ImageUrl)
+                    .FirstOrDefault();
+
+                items.Add(new CartItemDto
                 {
                     Id = item.Id,
                     ProductId = item.ProductId,
                     ProductName = item.Product.Name,
-                    UnitPrice = item.Product.Price,
+
+                    UnitPrice = pricing.FinalPrice,
+
                     Quantity = item.Quantity,
+
                     TotalPrice =
-                        item.Product.Price * item.Quantity,
-                    ImageUrl = item.Product.ImageUrl,
+                        pricing.FinalPrice * item.Quantity,
+
+                    ImageUrl = imageUrl,
+
                     AvailableStock =
                         item.Product.StockQuantity
-                })
-                .ToList();
+                });
+            }
 
             return new CartResponseDto
             {
                 Id = cart.Id,
+
                 Items = items,
+
                 TotalAmount =
                     items.Sum(x => x.TotalPrice),
+
                 TotalItems =
                     items.Sum(x => x.Quantity)
             };

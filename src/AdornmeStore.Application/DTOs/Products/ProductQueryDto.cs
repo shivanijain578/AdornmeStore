@@ -13,10 +13,9 @@ namespace AdornmeStore.Application.DTOs.Products
         public decimal? MinPrice { get; set; }
 
         public decimal? MaxPrice { get; set; }
-
         public string? SortBy { get; set; }
 
-        public bool SortDescending { get; set; } = false;
+        public bool SortDescending { get; set; }
 
         public int PageNumber { get; set; } = 1;
 

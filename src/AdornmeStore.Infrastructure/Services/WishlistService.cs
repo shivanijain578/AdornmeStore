@@ -32,15 +32,29 @@ namespace AdornmeStore.Infrastructure.Services
                 await _wishlistRepository
                     .GetByUserIdAsync(_currentUser.UserId);
 
-            return items.Select(x => new WishlistItemDto
+            return items.Select(x =>
             {
-                Id = x.Id,
-                ProductId = x.ProductId,
-                ProductName = x.Product.Name,
-                Price = x.Product.Price,
-                ImageUrl = x.Product.ImageUrl,
-                StockQuantity = x.Product.StockQuantity,
-                AddedAt = x.AddedAt
+                var imageUrl = x.Product.ProductImages
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => i.ImageUrl)
+                    .FirstOrDefault();
+
+                return new WishlistItemDto
+                {
+                    Id = x.Id,
+
+                    ProductId = x.ProductId,
+
+                    ProductName = x.Product.Name,
+
+                    Price = x.Product.SellingPrice,
+
+                    ImageUrl = imageUrl,
+
+                    StockQuantity = x.Product.StockQuantity,
+
+                    AddedAt = x.AddedAt
+                };
             });
         }
 

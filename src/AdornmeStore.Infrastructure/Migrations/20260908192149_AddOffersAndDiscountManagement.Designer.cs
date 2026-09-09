@@ -4,6 +4,7 @@ using AdornmeStore.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AdornmeStore.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260908192149_AddOffersAndDiscountManagement")]
+    partial class AddOffersAndDiscountManagement
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -218,52 +221,6 @@ namespace AdornmeStore.Infrastructure.Migrations
                     b.HasIndex("PaymentId");
 
                     b.ToTable("Checkouts");
-                });
-
-            modelBuilder.Entity("AdornmeStore.Domain.Entities.InventoryTransaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NewStock")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PreviousStock")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Reason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Reference")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("InventoryTransactions");
                 });
 
             modelBuilder.Entity("AdornmeStore.Domain.Entities.Offer", b =>
@@ -517,9 +474,6 @@ namespace AdornmeStore.Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<int>("LowStockThreshold")
-                        .HasColumnType("int");
 
                     b.Property<string>("Material")
                         .HasColumnType("nvarchar(max)");
@@ -793,17 +747,6 @@ namespace AdornmeStore.Infrastructure.Migrations
                     b.Navigation("Payment");
                 });
 
-            modelBuilder.Entity("AdornmeStore.Domain.Entities.InventoryTransaction", b =>
-                {
-                    b.HasOne("AdornmeStore.Domain.Entities.Product", "Product")
-                        .WithMany("InventoryTransactions")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("AdornmeStore.Domain.Entities.OfferCategory", b =>
                 {
                     b.HasOne("AdornmeStore.Domain.Entities.Category", "Category")
@@ -992,8 +935,6 @@ namespace AdornmeStore.Infrastructure.Migrations
             modelBuilder.Entity("AdornmeStore.Domain.Entities.Product", b =>
                 {
                     b.Navigation("CartItems");
-
-                    b.Navigation("InventoryTransactions");
 
                     b.Navigation("ProductImages");
 

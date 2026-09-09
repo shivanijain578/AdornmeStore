@@ -95,19 +95,33 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddScoped<IWishlistRepository,WishlistRepository>();
-builder.Services.AddScoped<IWishlistService,WishlistService>();
-builder.Services.AddScoped<ICartRepository,CartRepository>();
-builder.Services.AddScoped<ICartService,CartService>();
 
-// Repositories
+builder.Services.AddScoped<IWishlistRepository, WishlistRepository>();
+builder.Services.AddScoped<IWishlistService, WishlistService>();
+
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartService, CartService>();
+
+builder.Services.AddScoped<IOfferService, OfferService>();
+builder.Services.AddScoped<IOfferRepository, OfferRepository>();
+
+builder.Services.AddScoped<IProductPricingService, ProductPricingService>();
+
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
+
+builder.Services.AddScoped<IFileStorageService, FileStorageService>();
+
+// Product Repository
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
+
+// Category Repository
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 // Unit of Work
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddHttpContextAccessor();
 
 // CORS
 builder.Services.AddCors(options =>
@@ -131,6 +145,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors("Angular");
 
