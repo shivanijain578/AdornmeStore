@@ -24,7 +24,6 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _context.Categories
             .AsNoTracking()
-            .Where(x => x.IsActive)
             .OrderBy(x => x.Name)
             .ToListAsync();
     }

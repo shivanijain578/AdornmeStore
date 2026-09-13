@@ -63,7 +63,7 @@ namespace AdornmeStore.Infrastructure.Services
             var product =
                 await _productRepository.GetByIdAsync(productId);
 
-            if (product == null || !product.IsActive)
+            if (product == null || !product.IsVisible)
             {
                 throw new KeyNotFoundException(
                     "Product not found.");

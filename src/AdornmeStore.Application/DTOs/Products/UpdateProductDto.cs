@@ -32,7 +32,7 @@ namespace AdornmeStore.Application.DTOs.Products
 
         public int CategoryId { get; set; }
 
-        public bool IsActive { get; set; }
+        public bool IsVisible { get; set; }
 
         public List<IFormFile> Images { get; set; } = new();
 

@@ -37,7 +37,7 @@ public class AdminController : ControllerBase
             .CountAsync(cancellationToken);
 
         var activeProductsCount = await _db.Products
-            .CountAsync(p => p.IsActive, cancellationToken);
+            .CountAsync(p => p.IsVisible, cancellationToken);
 
         var bannersCount = await _db.Banners
             .CountAsync(cancellationToken);
@@ -249,7 +249,7 @@ public class AdminController : ControllerBase
                 stockQuantity = p.StockQuantity,
                 lowStockThreshold = p.LowStockThreshold,
                 isOutOfStock = p.StockQuantity <= 0,
-                isActive = p.IsActive
+                isVisible = p.IsVisible
             })
             .ToListAsync(cancellationToken);
 

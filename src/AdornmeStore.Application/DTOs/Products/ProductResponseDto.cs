@@ -28,7 +28,7 @@ namespace AdornmeStore.Application.DTOs.Products
 
         public string CategoryName { get; set; } = string.Empty;
 
-        public bool IsActive { get; set; }
+        public bool IsVisible { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

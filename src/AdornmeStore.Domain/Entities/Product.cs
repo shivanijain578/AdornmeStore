@@ -35,7 +35,7 @@ public class Product
 
     public int CategoryId { get; set; }
 
-    public bool IsActive { get; set; } = true;
+    public bool IsVisible { get; set; } = true;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

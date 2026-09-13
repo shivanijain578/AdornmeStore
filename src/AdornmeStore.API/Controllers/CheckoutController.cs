@@ -94,7 +94,7 @@ public class CheckoutController : ControllerBase
                     });
                 }
 
-                if (!product.IsActive)
+                if (!product.IsVisible)
                 {
                     return BadRequest(new
                     {

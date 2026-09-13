@@ -158,7 +158,7 @@ public class InventoryService : IInventoryService
                 "Product not found.");
         }
 
-        if (!product.IsActive)
+        if (!product.IsVisible)
         {
             throw new InvalidOperationException(
                 $"Product '{product.Name}' is no longer available.");

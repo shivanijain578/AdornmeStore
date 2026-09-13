@@ -65,7 +65,7 @@ public class ProductService : IProductService
         var product =
             await _productRepository.GetByIdWithCategoryAsync(id);
 
-        if (product == null || !product.IsActive)
+        if (product == null || !product.IsVisible)
             return null;
 
         return MapToDto(product);
@@ -107,7 +107,7 @@ public class ProductService : IProductService
 
             CategoryId = dto.CategoryId,
 
-            IsActive = true,
+            IsVisible = true,
 
             CreatedAt = DateTime.UtcNow,
 
@@ -149,15 +149,11 @@ public class ProductService : IProductService
         return MapToDto(created!);
     }
 
-    public async Task<ProductResponseDto?> UpdateAsync(
-     int id,
-     UpdateProductDto dto)
+    public async Task<ProductResponseDto?> UpdateAsync( int id, UpdateProductDto dto)
     {
         ValidateProduct(
             dto.OriginalPrice,
             dto.SellingPrice);
-
-        ValidateImages(dto.Images);
 
         var product =
             await _productRepository.GetByIdAsync(id);
@@ -191,45 +187,62 @@ public class ProductService : IProductService
 
         product.CategoryId = dto.CategoryId;
 
-        product.IsActive = dto.IsActive;
+        product.IsVisible = dto.IsVisible;
 
         product.UpdatedAt = DateTime.UtcNow;
 
         product.CalculateDiscount();
 
-        // Delete old physical image files
-        foreach (var oldImage in product.ProductImages)
+        /*
+         * Images are optional during update.
+         *
+         * If no new images are uploaded:
+         * - Keep the existing images.
+         *
+         * If new images are uploaded:
+         * - Validate them.
+         * - Delete the old physical files.
+         * - Remove old ProductImage records.
+         * - Save the new images.
+         */
+        if (dto.Images != null && dto.Images.Count > 0)
         {
-            await _fileStorageService.DeleteFileAsync(
-                oldImage.ImageUrl);
-        }
+            ValidateImages(dto.Images);
 
-        // Remove old ProductImage records
-        product.ProductImages.Clear();
+            // Delete old physical image files
+            foreach (var oldImage in product.ProductImages)
+            {
+                await _fileStorageService.DeleteFileAsync(
+                    oldImage.ImageUrl);
+            }
 
-        // Save new images
-        var displayOrder = 1;
+            // Remove old ProductImage records
+            product.ProductImages.Clear();
 
-        foreach (var image in dto.Images)
-        {
-            var imageUrl =
-                await _fileStorageService.SaveFileAsync(
-                    image,
-                    "product-images");
+            // Save new images
+            var displayOrder = 1;
 
-            product.ProductImages.Add(
-                new ProductImage
-                {
-                    ProductId = product.Id,
+            foreach (var image in dto.Images)
+            {
+                var imageUrl =
+                    await _fileStorageService.SaveFileAsync(
+                        image,
+                        "product-images");
 
-                    ImageUrl = imageUrl,
+                product.ProductImages.Add(
+                    new ProductImage
+                    {
+                        ProductId = product.Id,
 
-                    DisplayOrder = displayOrder++,
+                        ImageUrl = imageUrl,
 
-                    CreatedAt = DateTime.UtcNow,
+                        DisplayOrder = displayOrder++,
 
-                    UpdatedAt = DateTime.UtcNow
-                });
+                        CreatedAt = DateTime.UtcNow,
+
+                        UpdatedAt = DateTime.UtcNow
+                    });
+            }
         }
 
         await _productRepository.UpdateAsync(product);
@@ -252,7 +265,7 @@ public class ProductService : IProductService
             return false;
 
         // Keep existing soft-delete behaviour.
-        product.IsActive = false;
+        product.IsVisible = false;
         product.UpdatedAt = DateTime.UtcNow;
 
         await _productRepository.UpdateAsync(product);
@@ -322,7 +335,7 @@ public class ProductService : IProductService
 
             CategoryName = product.Category?.Name ?? string.Empty,
 
-            IsActive = product.IsActive,
+            IsVisible = product.IsVisible,
 
             CreatedAt = product.CreatedAt,
 

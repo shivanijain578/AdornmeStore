@@ -96,7 +96,7 @@ public class HomeController : ControllerBase
         var bestSellerProductsData = await _db.Products
             .AsNoTracking()
             .Where(p =>
-                p.IsActive &&
+                p.IsVisible &&
                 bestSellerIds.Contains(p.Id))
             .Select(p => new
             {
@@ -148,7 +148,7 @@ public class HomeController : ControllerBase
 
         var newArrivals = await _db.Products
             .AsNoTracking()
-            .Where(p => p.IsActive)
+            .Where(p => p.IsVisible)
             .OrderByDescending(p => p.CreatedAt)
             .Take(8)
             .Select(p => new

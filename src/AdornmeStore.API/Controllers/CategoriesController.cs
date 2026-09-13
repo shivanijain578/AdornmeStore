@@ -29,31 +29,55 @@ public class CategoriesController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> CreateCategory(
-        [FromBody] CreateCategoryDto dto)
+     [FromForm] CreateCategoryDto dto)
     {
-        var category =
-            await _categoryService.CreateAsync(dto);
+        try
+        {
+            var category =
+                await _categoryService.CreateAsync(dto);
 
-        return Ok(category);
+            return Ok(category);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin")]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> UpdateCategory(
-        int id,
-        [FromBody] UpdateCategoryDto dto)
+     int id,
+     [FromForm] UpdateCategoryDto dto)
     {
-        var category =
-            await _categoryService.UpdateAsync(id, dto);
+        try
+        {
+            var category =
+                await _categoryService.UpdateAsync(id, dto);
 
-        if (category == null)
-            return NotFound(new
+            if (category == null)
             {
-                message = "Category not found."
-            });
+                return NotFound(new
+                {
+                    message = "Category not found."
+                });
+            }
 
-        return Ok(category);
+            return Ok(category);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     [HttpDelete("{id:int}")]

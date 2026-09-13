@@ -36,7 +36,7 @@ public class HomeProductsController : ControllerBase
 
         var query = _db.Products
             .AsNoTracking()
-            .Where(p => p.IsActive);
+            .Where(p => p.IsVisible);
 
         if (categoryId.HasValue)
         {
@@ -85,7 +85,7 @@ public class HomeProductsController : ControllerBase
             .AsNoTracking()
             .Where(x =>
                 x.Id == id &&
-                x.IsActive)
+                x.IsVisible)
             .Select(x => new
             {
                 x.Id,

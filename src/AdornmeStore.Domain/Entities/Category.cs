@@ -12,7 +12,8 @@ namespace AdornmeStore.Domain.Entities
 
         public string? Description { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        public bool IsVisible { get; set; } = true;
+        public string ImageUrl { get; set; } = string.Empty;
 
         public ICollection<Product> Products { get; set; } =
             new List<Product>();
