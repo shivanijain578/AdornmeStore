@@ -69,9 +69,7 @@ public class HomeController : ControllerBase
             .Take(8)
             .ToListAsync(cancellationToken);
 
-        var bestSellerIds = bestSellerProducts
-            .Select(x => x.productId)
-            .ToList();
+        var bestSellerIds = bestSellerProducts.Select(x => x.productId).ToList();
 
         var bestSellerProductsData = await _db.Products
             .AsNoTracking()
@@ -143,11 +141,14 @@ public class HomeController : ControllerBase
             })
             .ToListAsync(cancellationToken);
 
+        // Keep the Home page populated even before sales history exists.
+        var topStyles = bestSellers.Count > 0 ? bestSellers : newArrivals;
+
         return Ok(new
         {
             banners,
             categories,
-            bestSellers,
+            bestSellers = topStyles,
             newArrivals
         });
     }
