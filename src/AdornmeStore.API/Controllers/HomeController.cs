@@ -16,19 +16,10 @@ public class HomeController : ControllerBase
         _db = db;
     }
 
-    // =====================================================
-    // HOME PAGE
-    // =====================================================
-
     [HttpGet]
     [AllowAnonymous]
-    public async Task<IActionResult> GetHome(
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> GetHome(CancellationToken cancellationToken)
     {
-        // -------------------------
-        // Active banners
-        // -------------------------
-
         var banners = await _db.Banners
             .AsNoTracking()
             .Where(b => b.IsActive)
@@ -44,26 +35,18 @@ public class HomeController : ControllerBase
             })
             .ToListAsync(cancellationToken);
 
-
-        // -------------------------
-        // Categories
-        // -------------------------
-
         var categories = await _db.Categories
             .AsNoTracking()
+            .Where(c => c.IsVisible)
             .OrderBy(c => c.Name)
             .Select(c => new
             {
                 id = c.Id,
                 name = c.Name,
-                description = c.Description
+                description = c.Description,
+                imageUrl = c.ImageUrl
             })
             .ToListAsync(cancellationToken);
-
-
-        // -------------------------
-        // Best Sellers
-        // -------------------------
 
         var bestSellerProducts = await _db.OrderItems
             .AsNoTracking()
@@ -86,18 +69,13 @@ public class HomeController : ControllerBase
             .Take(8)
             .ToListAsync(cancellationToken);
 
-
-        var bestSellerIds =
-            bestSellerProducts
-                .Select(x => x.productId)
-                .ToList();
-
+        var bestSellerIds = bestSellerProducts
+            .Select(x => x.productId)
+            .ToList();
 
         var bestSellerProductsData = await _db.Products
             .AsNoTracking()
-            .Where(p =>
-                p.IsVisible &&
-                bestSellerIds.Contains(p.Id))
+            .Where(p => p.IsVisible && bestSellerIds.Contains(p.Id))
             .Select(p => new
             {
                 p.Id,
@@ -107,7 +85,6 @@ public class HomeController : ControllerBase
                 p.DiscountPercentage,
                 p.CategoryId,
                 categoryName = p.Category.Name,
-
                 images = p.ProductImages
                     .OrderBy(i => i.DisplayOrder)
                     .Select(i => new
@@ -119,7 +96,6 @@ public class HomeController : ControllerBase
                     .ToList()
             })
             .ToListAsync(cancellationToken);
-
 
         var bestSellers = bestSellerProducts
             .Join(
@@ -141,11 +117,6 @@ public class HomeController : ControllerBase
             .OrderByDescending(x => x.quantitySold)
             .ToList();
 
-
-        // -------------------------
-        // New Arrivals
-        // -------------------------
-
         var newArrivals = await _db.Products
             .AsNoTracking()
             .Where(p => p.IsVisible)
@@ -160,7 +131,6 @@ public class HomeController : ControllerBase
                 p.DiscountPercentage,
                 p.CategoryId,
                 categoryName = p.Category.Name,
-
                 images = p.ProductImages
                     .OrderBy(i => i.DisplayOrder)
                     .Select(i => new
@@ -173,7 +143,6 @@ public class HomeController : ControllerBase
             })
             .ToListAsync(cancellationToken);
 
-
         return Ok(new
         {
             banners,
@@ -183,58 +152,45 @@ public class HomeController : ControllerBase
         });
     }
 
-
-    // =====================================================
-    // CATEGORIES
-    // =====================================================
-
     [HttpGet("categories")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetCategories(
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCategories(CancellationToken cancellationToken)
     {
         var categories = await _db.Categories
             .AsNoTracking()
+            .Where(c => c.IsVisible)
             .OrderBy(c => c.Name)
             .Select(c => new
             {
                 id = c.Id,
                 name = c.Name,
-                description = c.Description
+                description = c.Description,
+                imageUrl = c.ImageUrl
             })
             .ToListAsync(cancellationToken);
 
         return Ok(categories);
     }
 
-
-    // =====================================================
-    // CATEGORY DETAILS
-    // =====================================================
-
     [HttpGet("categories/{id:int}")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetCategory(
-        int id,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> GetCategory(int id, CancellationToken cancellationToken)
     {
         var category = await _db.Categories
             .AsNoTracking()
-            .Where(c => c.Id == id)
+            .Where(c => c.Id == id && c.IsVisible)
             .Select(c => new
             {
                 id = c.Id,
                 name = c.Name,
-                description = c.Description
+                description = c.Description,
+                imageUrl = c.ImageUrl
             })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (category == null)
         {
-            return NotFound(new
-            {
-                message = "Category not found."
-            });
+            return NotFound(new { message = "Category not found." });
         }
 
         return Ok(category);
