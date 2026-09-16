@@ -56,7 +56,8 @@ public class HomeController : ControllerBase
             {
                 id = c.Id,
                 name = c.Name,
-                description = c.Description
+                description = c.Description,
+                ImageUrl = c.ImageUrl
             })
             .ToListAsync(cancellationToken);
 
@@ -200,7 +201,8 @@ public class HomeController : ControllerBase
             {
                 id = c.Id,
                 name = c.Name,
-                description = c.Description
+                description = c.Description,
+                ImageUrl = c.ImageUrl
             })
             .ToListAsync(cancellationToken);
 
@@ -225,7 +227,8 @@ public class HomeController : ControllerBase
             {
                 id = c.Id,
                 name = c.Name,
-                description = c.Description
+                description = c.Description,
+                ImageUrl = c.ImageUrl
             })
             .FirstOrDefaultAsync(cancellationToken);
 
